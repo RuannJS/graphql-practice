@@ -3,12 +3,22 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './user.entity';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UseGuards } from '@nestjs/common';
+import { UserGuard } from 'src/guards/user/user.guard';
+import { UserDecorator } from 'src/decorators/user/user.decorator';
+
+export interface UserTest {
+  id: string;
+  name: string;
+  email: string;
+}
 
 @Resolver('User')
 export class UserResolver {
   constructor(private readonly userService: UserService) {}
 
   @Query(() => [User])
+  @UseGuards(UserGuard)
   async findAllUsers(): Promise<User[]> {
     const users = await this.userService.findAllUsers();
 
@@ -32,9 +42,9 @@ export class UserResolver {
   @Mutation(() => User)
   async updateUser(
     @Args('data') data: UpdateUserDto,
-    @Args('id') id: string,
+    @UserDecorator() user: UserTest,
   ): Promise<User> {
-    const updatedUser = await this.userService.updateUser(id, data);
+    const updatedUser = await this.userService.updateUser(user.id, data);
 
     return updatedUser;
   }
